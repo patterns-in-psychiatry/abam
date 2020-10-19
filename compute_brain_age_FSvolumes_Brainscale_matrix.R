@@ -42,7 +42,7 @@ if (dim(subjects)[2] == 2)
 
 # load matrices containing model weights and scaling factors
 # variables in model_matrix were renamed (need libary stringr) according to 
-load("Brainscale_FSvolumes_based_brain_age_models_v2.Rdata")
+load("Brainscale_FSvolumes_based_brain_age_models.Rdata")
 
 suffixlist <- c("C","M","F")
 modellist <- list(model_matrix_C,model_matrix_M,model_matrix_F)
