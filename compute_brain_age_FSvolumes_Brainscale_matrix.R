@@ -42,7 +42,7 @@ if (dim(subjects)[2] == 2)
 
 # load matrices containing model weights and scaling factors
 # variables in model_matrix were renamed (need libary stringr) according to 
-load("Brainscale_FSvolumes_based_brain_age_models.Rdata")
+load("Brainscale_FSvolumes_based_brain_age_models_v2.Rdata")
 
 suffixlist <- c("C","M","F")
 modellist <- list(model_matrix_C,model_matrix_M,model_matrix_F)
@@ -62,7 +62,7 @@ VARlist <- str_replace(rownames(model_matrix),"_gc","")
 # prepare data; divide by ICV 
 for (var in VARlist)
 {
-	data[,sprintf("%s_gc",var)] <- data[,var]/data[,"EstimatedTotalIntraCranialVol"]
+	data[,sprintf("%s_gc",var)] <- data[,var]/data[,grep("IntraCranialVol",names(data))]
 }
 # compute data scaled by train_dat scale parameters and model scale parameters
 for (var in VARlist)
@@ -76,11 +76,11 @@ for (k in 1:25)
 {
 	# compute X*W + C, where X contains the input data (columns are sprintf("%s_gc_scaled",VARlist), rows are subjects
 	# W are the weights (scaled by sigma_y/sigma_x_j)
-	# C is a constant ( -sum_j (mu_x,j times sigma_y/sigma_x_j), plus mu_y)
+	# C is a constant ( -sum_j (mu_x,j times sigma_y/sigma_x_j), plus mu_y + intercept/sigma_y) 
 
 X <- as.matrix(data[output$ID,sprintf("%s_gc_scaled",VARlist)])
 W <- as.matrix((model_matrix[sprintf("%s_gc",VARlist),sprintf("weight_%i",k)]*model_matrix[sprintf("%s_gc",VARlist),sprintf("sd_model_y_%i",k)])/model_matrix[sprintf("%s_gc",VARlist),sprintf("sd_model_x_%i",k)])
-C <- model_matrix[1,sprintf("mean_model_y_%i",k)] - sum((model_matrix[sprintf("%s_gc",VARlist),sprintf("mean_model_x_%i",k)]*model_matrix[sprintf("%s_gc",VARlist),sprintf("sd_model_y_%i",k)]*model_matrix[sprintf("%s_gc",VARlist),sprintf("weight_%i",k)])/model_matrix[sprintf("%s_gc",VARlist),sprintf("sd_model_x_%i",k)])
+C <- model_matrix[1,sprintf("mean_model_y_%i",k)] + model_matrix[1,sprintf("intercept_%i",k)]*model_matrix[1,sprintf("sd_model_y_%i",k)] - sum((model_matrix[sprintf("%s_gc",VARlist),sprintf("mean_model_x_%i",k)]*model_matrix[sprintf("%s_gc",VARlist),sprintf("sd_model_y_%i",k)]*model_matrix[sprintf("%s_gc",VARlist),sprintf("weight_%i",k)])/model_matrix[sprintf("%s_gc",VARlist),sprintf("sd_model_x_%i",k)]) 
 output[,sprintf("BA_%s_%i",suffixlist[p],k)] <- X%*%W + C
 }
 
